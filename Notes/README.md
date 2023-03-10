@@ -1,0 +1,1 @@
+This dir is made for notes recording.

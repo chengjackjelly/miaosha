@@ -7,6 +7,11 @@ spring:
         username: root
         password: woshicjj110
         schema: classpath:miaosha.sql
+server:
+    tomcat:
+        accept-count: 1000
+        max-threads: 800
+        min-spare-threads: 100
 ---
 spring:
     profiles: container
