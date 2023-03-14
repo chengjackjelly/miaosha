@@ -7,6 +7,14 @@ spring:
         username: root
         password: woshicjj110
         schema: classpath:miaosha.sql
+    redis:
+        host: 127.0.0.1
+        port: 6379
+        database: 10
+        jedis:
+            pool:
+                max-active: 50
+                min-idle: 20
 server:
     tomcat:
         accept-count: 1000
