@@ -2,8 +2,9 @@ package com.miaosha.service.model;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import java.io.Serializable;
 
-public class UserModel {
+public class UserModel implements Serializable {
     private Integer id;
     private String name;
     private Byte gender;
