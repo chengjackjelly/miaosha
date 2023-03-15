@@ -9,6 +9,7 @@ import com.miaosha.service.model.UserModel;
 import com.miaosha.service.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import sun.misc.BASE64Encoder;
@@ -18,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @CrossOrigin(allowCredentials = "true", allowedHeaders ="*",originPatterns ="*")
 @Controller("user")
@@ -29,6 +32,8 @@ public class UserController extends BaseController{
     @Autowired
     private HttpServletRequest httpServletRequest;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @RequestMapping("/get")
     @ResponseBody
@@ -66,9 +71,16 @@ public class UserController extends BaseController{
         this.httpServletRequest.getSession().setAttribute("IS_LOGIN",true);
         this.httpServletRequest.getSession().setAttribute("LOGIN_USER",userModel);
 
+        //登陆凭证token，UUID（全局唯一性）
+        String uuidToken=UUID.randomUUID().toString();
+        uuidToken=uuidToken.replace("-","");
+
+        redisTemplate.opsForValue().set(uuidToken,userModel);
+        redisTemplate.expire(uuidToken,1, TimeUnit.HOURS);
 
 
-        return CommonReturnType.create(null);
+        //下发Token
+        return CommonReturnType.create(uuidToken);
 
     }
     @RequestMapping(value = "/register",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
