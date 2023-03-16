@@ -16,6 +16,7 @@ spring:
                 max-active: 50
                 min-idle: 20
 server:
+    port: 8090
     tomcat:
         accept-count: 1000
         max-threads: 800
