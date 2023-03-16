@@ -16,7 +16,7 @@ public class BaseController {
 
     public static final String CONTENT_TYPE_FORMED="application/x-www-form-urlencoded";
 
-
+//开发环境注释以下方便检查错误
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody

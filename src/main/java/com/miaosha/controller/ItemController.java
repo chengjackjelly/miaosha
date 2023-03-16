@@ -1,23 +1,21 @@
 package com.miaosha.controller;
 
 import com.miaosha.controller.viewobject.ItemVO;
-import com.miaosha.controller.viewobject.UserVO;
 import com.miaosha.error.BusinessException;
 import com.miaosha.error.EmBussineseError;
 import com.miaosha.response.CommonReturnType;
 import com.miaosha.service.ItemService;
-import com.miaosha.service.impl.PromoServiceImpl;
 import com.miaosha.service.model.ItemModel;
-import com.miaosha.service.model.PromoModel;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @CrossOrigin(allowCredentials = "true", allowedHeaders ="*",originPatterns ="*")
@@ -28,7 +26,8 @@ public class ItemController extends  BaseController{
     @Autowired
     private ItemService itemService;
 
-
+    @Autowired
+    private RedisTemplate redisTemplate;
 
 
     @Autowired
@@ -55,7 +54,7 @@ public class ItemController extends  BaseController{
 
     @RequestMapping("/list")
     @ResponseBody
-    public CommonReturnType listItem ()throws BusinessException {
+    public CommonReturnType listItem () {
         List<ItemModel> itemModelList=itemService.listItem();
         List<ItemVO> itemVOList=itemModelList.stream().map(itemModel ->
         {
@@ -68,10 +67,18 @@ public class ItemController extends  BaseController{
     @RequestMapping("/get")
     @ResponseBody
     public CommonReturnType getItem(@RequestParam(name="id") Integer id) throws BusinessException {
-        ItemModel itemModel=itemService.getItemById(id);
+
+        ItemModel itemModel= (ItemModel) redisTemplate.opsForValue().get("item_"+id);
+
         if(itemModel==null){
-            throw  new BusinessException(EmBussineseError.ITEM_NOT_EXIST);
+            itemModel=itemService.getItemById(id);
+            redisTemplate.opsForValue().set("item_"+id,itemModel);
+            redisTemplate.expire("item_"+id,10, TimeUnit.MINUTES);
         }
+        if(itemModel==null){
+            throw new BusinessException(EmBussineseError.ITEM_NOT_EXIST,"商品不存在");
+        }
+
         return CommonReturnType.create(convertFromModel(itemModel));
     }
 
