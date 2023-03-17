@@ -1,9 +1,11 @@
 package com.miaosha.controller;
 
+import com.alibaba.druid.sql.ast.expr.SQLCaseExpr;
 import com.miaosha.controller.viewobject.ItemVO;
 import com.miaosha.error.BusinessException;
 import com.miaosha.error.EmBussineseError;
 import com.miaosha.response.CommonReturnType;
+import com.miaosha.service.CacheService;
 import com.miaosha.service.ItemService;
 import com.miaosha.service.model.ItemModel;
 import org.joda.time.format.DateTimeFormat;
@@ -29,6 +31,8 @@ public class ItemController extends  BaseController{
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private CacheService cacheService;
 
     @Autowired
     private HttpServletRequest httpServletRequest;
@@ -67,8 +71,11 @@ public class ItemController extends  BaseController{
     @RequestMapping("/get")
     @ResponseBody
     public CommonReturnType getItem(@RequestParam(name="id") Integer id) throws BusinessException {
+        ItemModel itemModel= (ItemModel) cacheService.getFromCommonCache("item_"+id);
 
-        ItemModel itemModel= (ItemModel) redisTemplate.opsForValue().get("item_"+id);
+        if(itemModel==null){
+            itemModel= (ItemModel) redisTemplate.opsForValue().get("item_"+id);
+        }
 
         if(itemModel==null){
             itemModel=itemService.getItemById(id);
