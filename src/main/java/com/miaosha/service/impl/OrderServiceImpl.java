@@ -9,8 +9,10 @@ import com.miaosha.error.BusinessException;
 import com.miaosha.error.EmBussineseError;
 import com.miaosha.service.ItemService;
 import com.miaosha.service.OrderService;
+import com.miaosha.service.UserService;
 import com.miaosha.service.model.ItemModel;
 import com.miaosha.service.model.OrderModel;
+import com.miaosha.service.model.UserModel;
 import org.omg.PortableServer.THREAD_POLICY_ID;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,15 +49,31 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private ItemService itemService;
 
+    @Autowired
+    private UserService userService;
+
     @Override
     @Transactional
     public OrderModel createOrder(Integer itemId,Integer userId,Integer amount,Integer promoId) throws BusinessException {
         //validate
-        ItemModel itemModel = itemService.getItemById(itemId);
-        if(itemDOMapper.selectByPrimaryKey(itemId)==null
-            || userDOMapper.selectByPrimaryKey(userId)==null){
-            throw new BusinessException(EmBussineseError.PARAMETER_VALIDATION_ERROR,"用户和商品ID不能为空");
+//        ItemModel itemModel = itemService.getItemById(itemId); //7章前的数据库查询实现方式
+        //7章交易优化，用redis cache
+        ItemModel itemModel = itemService.getItemByIdInCache(itemId);
+
+//        if(itemDOMapper.selectByPrimaryKey(itemId)==null
+//            || userDOMapper.selectByPrimaryKey(userId)==null){
+//            throw new BusinessException(EmBussineseError.PARAMETER_VALIDATION_ERROR,"用户和商品ID不能为空");
+//        }
+        if(itemModel == null){
+            throw new BusinessException(EmBussineseError.PARAMETER_VALIDATION_ERROR,"商品不存在");
         }
+
+        UserModel userModel = userService.getUserByIdInCache(userId);
+
+        if(userModel==null){
+            throw new BusinessException(EmBussineseError.PARAMETER_VALIDATION_ERROR,"用户不存在");
+        }
+
         if(amount<=0 || amount>=999){
             throw new BusinessException(EmBussineseError.PARAMETER_VALIDATION_ERROR,"交易数量不在规定范围[0,999]");
         }
