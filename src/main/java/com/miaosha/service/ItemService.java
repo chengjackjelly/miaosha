@@ -13,5 +13,7 @@ public interface ItemService {
     List<ItemModel> listItem();
     //商品详情浏览
     ItemModel getItemById(Integer id);
+    //缓存取商品
+    ItemModel getItemByIdInCache(Integer id);
 
 }
